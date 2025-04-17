@@ -5,24 +5,24 @@ const cors = require("cors");
 const app = express();
 const server = http.createServer(app);
 
-// ✅ FIX: Add CORS config here
+require("dotenv").config();
+
 const io = socketIO(server, {
   cors: {
-    origin: ["http://localhost:3000"], // Replace with your real frontend
+    origin: [
+      "http://localhost:3000",
+      "https://shoesphere.onrender.com"
+    ],
     methods: ["GET", "POST"],
     credentials: true,
   },
-});
-
-require("dotenv").config({
-  path: "./.env",
 });
 
 app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("Hello world from socket server!");
+  res.send("Socket.IO server is running");
 });
 
 let users = [];
@@ -40,7 +40,6 @@ const getUser = (receiverId) => {
   return users.find((user) => user.userId === receiverId);
 };
 
-// Message storage (per session)
 const createMessage = ({ senderId, receiverId, text, images }) => ({
   senderId,
   receiverId,
@@ -52,7 +51,6 @@ const createMessage = ({ senderId, receiverId, text, images }) => ({
 io.on("connection", (socket) => {
   console.log(`✅ A user connected: ${socket.id}`);
 
-  // Store user on connection
   socket.on("addUser", (userId) => {
     addUser(userId, socket.id);
     io.emit("getUsers", users);
@@ -60,7 +58,6 @@ io.on("connection", (socket) => {
 
   const messages = {};
 
-  // Handle messaging
   socket.on("sendMessage", ({ senderId, receiverId, text, images }) => {
     const message = createMessage({ senderId, receiverId, text, images });
     const user = getUser(receiverId);
@@ -76,7 +73,6 @@ io.on("connection", (socket) => {
 
   socket.on("messageSeen", ({ senderId, receiverId, messageId }) => {
     const user = getUser(senderId);
-
     if (messages[senderId]) {
       const message = messages[senderId].find(
         (m) => m.receiverId === receiverId && m.id === messageId
@@ -88,12 +84,10 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Last message logic
   socket.on("updateLastMessage", ({ lastMessage, lastMessagesId }) => {
     io.emit("getLastMessage", { lastMessage, lastMessagesId });
   });
 
-  // Disconnect cleanup
   socket.on("disconnect", () => {
     console.log(`❌ A user disconnected: ${socket.id}`);
     removeUser(socket.id);
@@ -101,8 +95,7 @@ io.on("connection", (socket) => {
   });
 });
 
-// Start the server
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
-  console.log(`🚀 Socket server running on port ${PORT}`);
+  console.log(`🚀 Socket.IO server is running on port ${PORT}`);
 });
