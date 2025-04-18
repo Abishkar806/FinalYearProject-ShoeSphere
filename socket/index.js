@@ -10,7 +10,7 @@ require("dotenv").config();
 const io = socketIO(server, {
   cors: {
     origin: [
-      "http://localhost:3000",
+      
       "https://shoesphere.onrender.com"
     ],
     methods: ["GET", "POST"],
