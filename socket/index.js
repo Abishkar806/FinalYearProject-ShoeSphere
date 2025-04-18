@@ -16,6 +16,7 @@ const io = socketIO(server, {
     methods: ["GET", "POST"],
     credentials: true,
   },
+  path: "/socket.io", // ← Add this
 });
 
 app.use(cors());
@@ -99,3 +100,4 @@ const PORT = process.env.PORT;
 server.listen(PORT, () => {
   console.log(`🚀 Socket.IO server is running on port ${PORT}`);
 });
+
