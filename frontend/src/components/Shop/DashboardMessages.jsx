@@ -9,8 +9,14 @@ import { server } from "../../server";
 import styles from "../../styles/styles";
 import { format } from "timeago.js";
 
-const ENDPOINT = "https://shoesphere.onrender.com";
-const socketId = socketIO(ENDPOINT, { transports: ["websocket"] });
+const ENDPOINT = "http://localhost:4000"; // Your backend port
+const socketId = socketIO(ENDPOINT, {
+  transports: ["websocket"],
+  withCredentials: true,
+});
+
+
+
 
 const DashboardMessages = () => {
   const { seller, isLoading } = useSelector((state) => state.seller);
@@ -22,7 +28,7 @@ const DashboardMessages = () => {
   const [newMessage, setNewMessage] = useState("");
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [activeStatus, setActiveStatus] = useState(false);
-  const [images, setImages] = useState();
+  const [, setImages] = useState();
   const [open, setOpen] = useState(false);
   const scrollRef = useRef(null);
 

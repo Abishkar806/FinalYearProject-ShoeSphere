@@ -11,7 +11,7 @@ const io = socketIO(server, {
   cors: {
     origin: [
       
-      "https://shoesphere.onrender.com"
+      "http://localhost:3000"
     ],
     methods: ["GET", "POST"],
     credentials: true,

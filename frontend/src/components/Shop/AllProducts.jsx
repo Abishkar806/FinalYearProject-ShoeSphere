@@ -1,26 +1,41 @@
 import { Button } from "@material-ui/core";
 import { DataGrid } from "@material-ui/data-grid";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { AiOutlineDelete, AiOutlineEye } from "react-icons/ai";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { getAllProductsShop } from "../../redux/actions/product";
-import { deleteProduct } from "../../redux/actions/product";
+import { getAllProductsShop, deleteProduct } from "../../redux/actions/product";
 import Loader from "../Layout/Loader";
+import { toast } from "react-toastify";
 
 const AllProducts = () => {
   const { products, isLoading } = useSelector((state) => state.products);
   const { seller } = useSelector((state) => state.seller);
-
   const dispatch = useDispatch();
+  const [localProducts, setLocalProducts] = useState([]);
 
   useEffect(() => {
-    dispatch(getAllProductsShop(seller._id));
-  }, [dispatch]);
+    if (seller?._id) {
+      dispatch(getAllProductsShop(seller._id));
+    }
+  }, [dispatch, seller?._id]);
 
-  const handleDelete = (id) => {
-    dispatch(deleteProduct(id));
-    window.location.reload();
+  useEffect(() => {
+    setLocalProducts(products);
+  }, [products]);
+
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this product?");
+    if (!confirmDelete) return;
+
+    try {
+      await dispatch(deleteProduct(id));
+      toast.success("Product deleted successfully!");
+      setLocalProducts((prev) => prev.filter((item) => item._id !== id));
+    } catch (error) {
+      toast.error("Failed to delete product!");
+      console.error(error);
+    }
   };
 
   const columns = [
@@ -44,7 +59,6 @@ const AllProducts = () => {
       minWidth: 80,
       flex: 0.5,
     },
-
     {
       field: "sold",
       headerName: "Sold out",
@@ -54,37 +68,31 @@ const AllProducts = () => {
     },
     {
       field: "Preview",
-      flex: 0.8,
+      flex: 0.5,
       minWidth: 100,
       headerName: "",
-      type: "number",
       sortable: false,
       renderCell: (params) => {
         return (
-          <>
-            <Link to={`/product/${params.id}`}>
-              <Button>
-                <AiOutlineEye size={20} />
-              </Button>
-            </Link>
-          </>
+          <Link to={`/product/${params.id}`}>
+            <Button>
+              <AiOutlineEye size={20} />
+            </Button>
+          </Link>
         );
       },
     },
     {
       field: "Delete",
-      flex: 0.8,
-      minWidth: 120,
+      flex: 0.5,
+      minWidth: 100,
       headerName: "",
-      type: "number",
       sortable: false,
       renderCell: (params) => {
         return (
-          <>
-            <Button onClick={() => handleDelete(params.id)}>
-              <AiOutlineDelete size={20} />
-            </Button>
-          </>
+          <Button onClick={() => handleDelete(params.id)}>
+            <AiOutlineDelete size={20} color="red" />
+          </Button>
         );
       },
     },
@@ -92,14 +100,14 @@ const AllProducts = () => {
 
   const row = [];
 
-  products &&
-    products.forEach((item) => {
+  localProducts &&
+    localProducts.forEach((item) => {
       row.push({
         id: item._id,
         name: item.name,
         price: "Rs." + item.discountPrice,
         Stock: item.stock,
-        sold: item?.sold_out,
+        sold: item.sold_out,
       });
     });
 

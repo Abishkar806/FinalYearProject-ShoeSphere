@@ -1,3 +1,5 @@
+// routes/ShopRoutes.js
+import ShopHomePage from "../pages/Shop/ShopHomePage";
 import ShopDashboardPage from "../pages/Shop/ShopDashboardPage";
 import ShopCreateProduct from "../pages/Shop/ShopCreateProduct";
 import ShopAllProducts from "../pages/Shop/ShopAllProducts";
@@ -13,17 +15,18 @@ import ShopWithDrawMoneyPage from "../pages/Shop/ShopWithDrawMoneyPage";
 import ShopInboxPage from "../pages/Shop/ShopInboxPage";
 
 export {
-    ShopDashboardPage,
-    ShopCreateProduct,
-    ShopAllProducts,
-    ShopCreateEvents,
-    ShopAllEvents,
-    ShopAllCoupouns,
-    ShopPreviewPage,
-    ShopAllOrders,
-    ShopOrderDetails,
-    ShopAllRefunds,
-    ShopSettingsPage,
-    ShopWithDrawMoneyPage,
-    ShopInboxPage
-}
+  ShopHomePage,
+  ShopDashboardPage,
+  ShopCreateProduct,
+  ShopAllProducts,
+  ShopCreateEvents,
+  ShopAllEvents,
+  ShopAllCoupouns,
+  ShopPreviewPage,
+  ShopAllOrders,
+  ShopOrderDetails,
+  ShopAllRefunds,
+  ShopSettingsPage,
+  ShopWithDrawMoneyPage,
+  ShopInboxPage,
+};

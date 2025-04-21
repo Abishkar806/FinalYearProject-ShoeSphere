@@ -58,10 +58,11 @@ router.post("/create-user", async (req, res, next) => {
 // create activation token
 const createActivationToken = (user) => {
   return jwt.sign(user, process.env.ACTIVATION_SECRET, {
-    expiresIn: "5m",
+    expiresIn: "5d",
   });
 };
 
+// activate user
 // activate user
 router.post(
   "/activation",
@@ -77,6 +78,7 @@ router.post(
       if (!newUser) {
         return next(new ErrorHandler("Invalid token", 400));
       }
+
       const { name, email, password, avatar } = newUser;
 
       let user = await User.findOne({ email });
@@ -84,6 +86,7 @@ router.post(
       if (user) {
         return next(new ErrorHandler("User already exists", 400));
       }
+
       user = await User.create({
         name,
         email,

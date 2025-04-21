@@ -5,27 +5,29 @@ const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 
+// ✅ Enable CORS for frontend on localhost
 app.use(cors({
   origin: "http://localhost:3000",
   credentials: true
 }));
 
-app.use(express.json());
+// ✅ Allow larger JSON & URL-encoded payloads (e.g. base64 images)
+app.use(express.json({ limit: "20mb" }));
+app.use(express.urlencoded({ extended: true, limit: "20mb" }));
+
 app.use(cookieParser());
+
+// ✅ Basic test route
 app.use("/test", (req, res) => {
   res.send("Hello world!");
 });
 
-app.use(bodyParser.urlencoded({ extended: true, limit: "20mb" }));
-
-// config
+// ✅ Load environment variables
 if (process.env.NODE_ENV !== "PRODUCTION") {
-  require("dotenv").config({
-    path: "config/.env",
-  });
+  require("dotenv").config({ path: "config/.env" });
 }
 
-// import routes
+// ✅ Import and mount all routes
 const user = require("./controller/user");
 const shop = require("./controller/shop");
 const product = require("./controller/product");
@@ -48,7 +50,7 @@ app.use("/api/v2/coupon", coupon);
 app.use("/api/v2/payment", payment);
 app.use("/api/v2/withdraw", withdraw);
 
-// it's for ErrorHandling
+// ✅ Error handling middleware (must come last)
 app.use(ErrorHandler);
 
 module.exports = app;

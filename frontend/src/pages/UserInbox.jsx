@@ -10,8 +10,13 @@ import { AiOutlineArrowRight, AiOutlineSend } from "react-icons/ai";
 import { TfiGallery } from "react-icons/tfi";
 import styles from "../styles/styles";
 
-const ENDPOINT = "https://shoesphere.onrender.com";
-const socketId = socketIO(ENDPOINT, { transports: ["websocket"] });
+const ENDPOINT = "http://localhost:4000"; // Your backend port
+const socketId = socketIO(ENDPOINT, {
+  transports: ["websocket"],
+  withCredentials: true,
+});
+
+
 
 const UserInbox = () => {
   const { user, loading } = useSelector((state) => state.user);

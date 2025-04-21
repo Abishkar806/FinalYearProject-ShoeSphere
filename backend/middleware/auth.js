@@ -19,18 +19,14 @@ exports.isAuthenticated = catchAsyncErrors(async(req,res,next) => {
 });
 
 
-exports.isSeller = catchAsyncErrors(async(req,res,next) => {
-    const {seller_token} = req.cookies;
-    if(!seller_token){
-        return next(new ErrorHandler("Please login to continue", 401));
-    }
-
-    const decoded = jwt.verify(seller_token, process.env.JWT_SECRET_KEY);
-
+exports.isSeller = catchAsyncErrors(async (req, res, next) => {
+    const token = req.cookies.seller_token;
+    if (!token) return next(new ErrorHandler("Login required", 401));
+  
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     req.seller = await Shop.findById(decoded.id);
-
     next();
-});
+  });
 
 
 exports.isAdmin = (...roles) => {

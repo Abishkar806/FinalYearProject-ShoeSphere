@@ -36,7 +36,7 @@ const ProductDetails = ({ data }) => {
     } else {
       setClick(false);
     }
-  }, [data, wishlist]);
+  }, [data, wishlist, dispatch]);
 
   const incrementCount = () => {
     setCount(count + 1);
@@ -85,10 +85,9 @@ const ProductDetails = ({ data }) => {
       0
     );
 
-  const avg =  totalRatings / totalReviewsLength || 0;
+  const avg = totalRatings / totalReviewsLength || 0;
 
   const averageRating = avg.toFixed(2);
-
 
   const handleMessageSubmit = async () => {
     if (isAuthenticated) {
@@ -128,8 +127,9 @@ const ProductDetails = ({ data }) => {
                   {data &&
                     data.images.map((i, index) => (
                       <div
+                        key={i?.public_id || index}
                         className={`${
-                          select === 0 ? "border" : "null"
+                          select === index ? "border" : ""
                         } cursor-pointer`}
                       >
                         <img
@@ -140,6 +140,7 @@ const ProductDetails = ({ data }) => {
                         />
                       </div>
                     ))}
+
                   <div
                     className={`${
                       select === 1 ? "border" : "null"

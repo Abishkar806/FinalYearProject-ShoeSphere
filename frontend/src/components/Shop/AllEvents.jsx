@@ -1,31 +1,45 @@
 import { Button } from "@material-ui/core";
 import { DataGrid } from "@material-ui/data-grid";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { AiOutlineDelete, AiOutlineEye } from "react-icons/ai";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { deleteEvent, getAllEventsShop } from "../../redux/actions/event";
-import { getAllProductsShop } from "../../redux/actions/product";
-import { deleteProduct } from "../../redux/actions/product";
 import Loader from "../Layout/Loader";
+import { toast } from "react-toastify";
 
 const AllEvents = () => {
   const { events, isLoading } = useSelector((state) => state.events);
   const { seller } = useSelector((state) => state.seller);
-
   const dispatch = useDispatch();
+  const [localEvents, setLocalEvents] = useState([]);
 
   useEffect(() => {
-    dispatch(getAllEventsShop(seller._id));
-  }, [dispatch]);
+    if (seller?._id) {
+      dispatch(getAllEventsShop(seller._id));
+    }
+  }, [dispatch, seller?._id]);
 
-  const handleDelete = (id) => {
-    dispatch(deleteEvent(id));
-    window.location.reload();
+  useEffect(() => {
+    setLocalEvents(events);
+  }, [events]);
+
+  const handleDelete = async (id) => {
+  const confirmDelete = window.confirm("Are you sure you want to delete this event?");
+  if (!confirmDelete) return;
+
+  try {
+    await dispatch(deleteEvent(id, seller._id)); // pass seller ID!
+    toast.success("Event deleted successfully!");
+  } catch (error) {
+    toast.error("Failed to delete event!");
+    console.error(error);
   }
+};
+
 
   const columns = [
-    { field: "id", headerName: "Product Id", minWidth: 150, flex: 0.7 },
+    { field: "id", headerName: "Event Id", minWidth: 150, flex: 0.7 },
     {
       field: "name",
       headerName: "Name",
@@ -45,61 +59,51 @@ const AllEvents = () => {
       minWidth: 80,
       flex: 0.5,
     },
-
     {
       field: "sold",
-      headerName: "Sold out",
+      headerName: "Sold Out",
       type: "number",
       minWidth: 130,
       flex: 0.6,
     },
     {
       field: "Preview",
-      flex: 0.8,
+      flex: 0.5,
       minWidth: 100,
       headerName: "",
-      type: "number",
       sortable: false,
       renderCell: (params) => {
-        const d = params.row.name;
-        const product_name = d.replace(/\s+/g, "-");
+        const productName = params.row.name.replace(/\s+/g, "-");
         return (
-          <>
-            <Link to={`/product/${product_name}`}>
-              <Button>
-                <AiOutlineEye size={20} />
-              </Button>
-            </Link>
-          </>
+          <Link to={`/product/${productName}`}>
+            <Button>
+              <AiOutlineEye size={20} />
+            </Button>
+          </Link>
         );
       },
     },
     {
       field: "Delete",
-      flex: 0.8,
-      minWidth: 120,
+      flex: 0.5,
+      minWidth: 100,
       headerName: "",
-      type: "number",
       sortable: false,
       renderCell: (params) => {
         return (
-          <>
-            <Button
-            onClick={() => handleDelete(params.id)}
-            >
-              <AiOutlineDelete size={20} />
-            </Button>
-          </>
+          <Button onClick={() => handleDelete(params.id)}>
+            <AiOutlineDelete size={20} color="red" />
+          </Button>
         );
       },
     },
   ];
 
-  const row = [];
+  const rows = [];
 
-  events &&
-  events.forEach((item) => {
-      row.push({
+  localEvents &&
+    localEvents.forEach((item) => {
+      rows.push({
         id: item._id,
         name: item.name,
         price: "Rs." + item.discountPrice,
@@ -115,7 +119,7 @@ const AllEvents = () => {
       ) : (
         <div className="w-full mx-8 pt-1 mt-10 bg-white">
           <DataGrid
-            rows={row}
+            rows={rows}
             columns={columns}
             pageSize={10}
             disableSelectionOnClick

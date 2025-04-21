@@ -1,7 +1,7 @@
 import { React, useState } from "react";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import styles from "../../styles/styles";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import axios from "axios";
 import { server } from "../../server";
 import { toast } from "react-toastify";
@@ -10,41 +10,32 @@ import { RxAvatar } from "react-icons/rx";
 const ShopCreate = () => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState();
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [zipCode, setZipCode] = useState("");
+
   const [address, setAddress] = useState("");
-  const [zipCode, setZipCode] = useState();
   const [avatar, setAvatar] = useState();
   const [password, setPassword] = useState("");
   const [visible, setVisible] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    axios
-      .post(`${server}/shop/create-shop`, {
+    try {
+      const { data } = await axios.post(`${server}/shop/create-shop`, {
         name,
         email,
         password,
         avatar,
         zipCode,
         address,
-        phoneNumber,
-      })
-      .then((res) => {
-        toast.success(res.data.message);
-        setName("");
-        setEmail("");
-        setPassword("");
-        setAvatar();
-        setZipCode();
-        setAddress("");
-        setPhoneNumber();
-      })
-      .catch((error) => {
-        toast.error(error.response.data.message);
+        phoneNumber
       });
+      toast.success(data.message);
+      setName(""); setEmail(""); setPassword(""); setAvatar(""); setZipCode(""); setAddress(""); setPhoneNumber("");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error occurred");
+    }
   };
-
   const handleFileInputChange = (e) => {
     const reader = new FileReader();
 

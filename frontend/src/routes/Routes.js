@@ -1,3 +1,4 @@
+// routes/Routes.js
 import LoginPage from "../pages/Login";
 import SignupPage from "../pages/SignupPage";
 import ActivationPage from "../pages/ActivationPage";
@@ -16,26 +17,26 @@ import SellerActivationPage from "../pages/SellerActivationPage";
 import ShopLoginPage from "../pages/ShopLoginPage";
 import OrderDetailsPage from "../pages/OrderDetailsPage";
 import TrackOrderPage from "../pages/TrackOrderPage";
-import UserInbox from "../pages/UserInbox.jsx";
+import UserInbox from "../pages/UserInbox";
 
-export { 
-    LoginPage,
-    SignupPage,
-    ActivationPage,
-    HomePage,
-    ProductsPage,
-    BestSellingPage,
-    EventsPage,
-    FAQPage,
-    CheckoutPage,
-    PaymentPage,
-    OrderSuccessPage,
-    ProductDetailsPage,
-    ProfilePage,
-    ShopCreatePage,
-    SellerActivationPage,
-    ShopLoginPage,
-    OrderDetailsPage,
-    TrackOrderPage,
-    UserInbox
+export {
+  LoginPage,
+  SignupPage,
+  ActivationPage,
+  HomePage,
+  ProductsPage,
+  BestSellingPage,
+  EventsPage,
+  FAQPage,
+  CheckoutPage,
+  PaymentPage,
+  OrderSuccessPage,
+  ProductDetailsPage,
+  ProfilePage,
+  ShopCreatePage,
+  SellerActivationPage,
+  ShopLoginPage,
+  OrderDetailsPage,
+  TrackOrderPage,
+  UserInbox,
 };
