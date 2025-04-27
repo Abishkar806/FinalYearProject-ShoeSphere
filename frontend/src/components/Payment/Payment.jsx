@@ -1,40 +1,38 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import styles from "../../styles/styles";
-import { useEffect } from "react";
-import {
-  CardNumberElement,
-  CardCvcElement,
-  CardExpiryElement,
-  useStripe,
-  useElements,
-} from "@stripe/react-stripe-js";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
-import { useSelector } from "react-redux";
-import axios from "axios";
-import { server } from "../../server";
-import { toast } from "react-toastify";
-import { RxCross1 } from "react-icons/rx";
+import React from "react"
+
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { CardNumberElement, CardCvcElement, CardExpiryElement, useStripe, useElements } from "@stripe/react-stripe-js"
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js"
+import { useSelector } from "react-redux"
+import axios from "axios"
+import { server } from "../../server"
+import { toast } from "react-toastify"
+import { RxCross1 } from "react-icons/rx"
+import { FiCreditCard, FiTruck } from "react-icons/fi"
+import { SiPaypal } from "react-icons/si"
+
 
 const Payment = () => {
-  const [orderData, setOrderData] = useState([]);
-  const [open, setOpen] = useState(false);
-  const { user } = useSelector((state) => state.user);
-  const navigate = useNavigate();
-  const stripe = useStripe();
-  const elements = useElements();
+  const [orderData, setOrderData] = useState([])
+  const [open, setOpen] = useState(false)
+  const { user } = useSelector((state) => state.user)
+  const navigate = useNavigate()
+  const stripe = useStripe()
+  const elements = useElements()
 
   useEffect(() => {
-    const orderData = JSON.parse(localStorage.getItem("latestOrder"));
-    setOrderData(orderData);
-  }, []);
+    const orderData = JSON.parse(localStorage.getItem("latestOrder"))
+    setOrderData(orderData)
+    window.scrollTo(0, 0)
+  }, [])
 
   const createOrder = (data, actions) => {
     return actions.order
       .create({
         purchase_units: [
           {
-            description: "Sunflower",
+            description: "ShoeSphere Order",
             amount: {
               currency_code: "USD",
               value: orderData?.totalPrice,
@@ -47,392 +45,439 @@ const Payment = () => {
         },
       })
       .then((orderID) => {
-        return orderID;
-      });
-  };
+        return orderID
+      })
+  }
 
   const order = {
     cart: orderData?.cart,
     shippingAddress: orderData?.shippingAddress,
     user: user && user,
     totalPrice: orderData?.totalPrice,
-  };
+  }
 
   const onApprove = async (data, actions) => {
-    return actions.order.capture().then(function (details) {
-      const { payer } = details;
+    return actions.order.capture().then((details) => {
+      const { payer } = details
 
-      let paymentInfo = payer;
+      const paymentInfo = payer
 
       if (paymentInfo !== undefined) {
-        paypalPaymentHandler(paymentInfo);
+        paypalPaymentHandler(paymentInfo)
       }
-    });
-  };
+    })
+  }
 
   const paypalPaymentHandler = async (paymentInfo) => {
     const config = {
       headers: {
         "Content-Type": "application/json",
       },
-    };
+    }
 
     order.paymentInfo = {
       id: paymentInfo.payer_id,
       status: "succeeded",
       type: "Paypal",
-    };
+    }
 
     await axios
       .post(`${server}/order/create-order`, order, config)
       .then((res) => {
-        setOpen(false);
-        navigate("/order/success");
-        toast.success("Order successful!");
-        localStorage.setItem("cartItems", JSON.stringify([]));
-        localStorage.setItem("latestOrder", JSON.stringify([]));
-        window.location.reload();
-      });
-  };
+        setOpen(false)
+        navigate("/order/success")
+        toast.success("Order successful!")
+        localStorage.setItem("cartItems", JSON.stringify([]))
+        localStorage.setItem("latestOrder", JSON.stringify([]))
+        window.location.reload()
+      })
+      .catch((error) => {
+        toast.error("Something went wrong with your order")
+        console.error(error)
+      })
+  }
 
   const paymentData = {
     amount: Math.round(orderData?.totalPrice * 100),
-  };
+  }
 
   const paymentHandler = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
     try {
       const config = {
         headers: {
           "Content-Type": "application/json",
         },
-      };
+      }
 
-      const { data } = await axios.post(
-        `${server}/payment/process`,
-        paymentData,
-        config
-      );
+      const { data } = await axios.post(`${server}/payment/process`, paymentData, config)
 
-      const client_secret = data.client_secret;
+      const client_secret = data.client_secret
 
-      if (!stripe || !elements) return;
+      if (!stripe || !elements) return
       const result = await stripe.confirmCardPayment(client_secret, {
         payment_method: {
           card: elements.getElement(CardNumberElement),
         },
-      });
+      })
 
       if (result.error) {
-        toast.error(result.error.message);
+        toast.error(result.error.message)
       } else {
         if (result.paymentIntent.status === "succeeded") {
-          order.paymnentInfo = {
+          order.paymentInfo = {
             id: result.paymentIntent.id,
             status: result.paymentIntent.status,
             type: "Credit Card",
-          };
+          }
 
           await axios
             .post(`${server}/order/create-order`, order, config)
             .then((res) => {
-              setOpen(false);
-              navigate("/order/success");
-              toast.success("Order successful!");
-              localStorage.setItem("cartItems", JSON.stringify([]));
-              localStorage.setItem("latestOrder", JSON.stringify([]));
-              window.location.reload();
-            });
+              setOpen(false)
+              navigate("/order/success")
+              toast.success("Order successful!")
+              localStorage.setItem("cartItems", JSON.stringify([]))
+              localStorage.setItem("latestOrder", JSON.stringify([]))
+              window.location.reload()
+            })
+            .catch((error) => {
+              toast.error("Something went wrong with your order")
+              console.error(error)
+            })
         }
       }
     } catch (error) {
-      toast.error(error);
+      toast.error(error.message || "Payment processing failed")
     }
-  };
+  }
 
   const cashOnDeliveryHandler = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
 
     const config = {
       headers: {
         "Content-Type": "application/json",
       },
-    };
+    }
 
     order.paymentInfo = {
       type: "Cash On Delivery",
-    };
+    }
 
     await axios
-    .post(`${server}/order/create-order`, order, config)
-    .then((res) => {
-      setOpen(false);
-      navigate("/order/success");
-      toast.success("Order successful!");
-      localStorage.setItem("cartItems", JSON.stringify([]));
-      localStorage.setItem("latestOrder", JSON.stringify([]));
-      window.location.reload();
-    });
-  };
+      .post(`${server}/order/create-order`, order, config)
+      .then((res) => {
+        setOpen(false)
+        navigate("/order/success")
+        toast.success("Order successful!")
+        localStorage.setItem("cartItems", JSON.stringify([]))
+        localStorage.setItem("latestOrder", JSON.stringify([]))
+        window.location.reload()
+      })
+      .catch((error) => {
+        toast.error("Something went wrong with your order")
+        console.error(error)
+      })
+  }
 
   return (
-    <div className="w-full flex flex-col items-center py-8">
-      <div className="w-[90%] 1000px:w-[70%] block 800px:flex">
-        <div className="w-full 800px:w-[65%]">
-          <PaymentInfo
-            user={user}
-            open={open}
-            setOpen={setOpen}
-            onApprove={onApprove}
-            createOrder={createOrder}
-            paymentHandler={paymentHandler}
-            cashOnDeliveryHandler={cashOnDeliveryHandler}
-          />
-        </div>
-        <div className="w-full 800px:w-[35%] 800px:mt-0 mt-8">
-          <CartData orderData={orderData} />
+    <div className="w-full bg-[#f0f4fa] min-h-screen py-8">
+      <div className="w-[95%] 1000px:w-[85%] m-auto">
+     
+
+        <div className="w-full block 800px:flex gap-8 mt-8">
+          <div className="w-full 800px:w-[65%]">
+            <PaymentInfo
+              user={user}
+              open={open}
+              setOpen={setOpen}
+              onApprove={onApprove}
+              createOrder={createOrder}
+              paymentHandler={paymentHandler}
+              cashOnDeliveryHandler={cashOnDeliveryHandler}
+            />
+          </div>
+          <div className="w-full 800px:w-[35%] 800px:mt-0 mt-8">
+            <CartData orderData={orderData} />
+          </div>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-const PaymentInfo = ({
-  user,
-  open,
-  setOpen,
-  onApprove,
-  createOrder,
-  paymentHandler,
-  cashOnDeliveryHandler,
-}) => {
-  const [select, setSelect] = useState(1);
+const PaymentInfo = ({ user, open, setOpen, onApprove, createOrder, paymentHandler, cashOnDeliveryHandler }) => {
+  const [select, setSelect] = useState(1)
 
   return (
-    <div className="w-full 800px:w-[95%] bg-[#fff] rounded-md p-5 pb-8">
-      {/* select buttons */}
-      <div>
-        <div className="flex w-full pb-5 border-b mb-2">
-          <div
-            className="w-[25px] h-[25px] rounded-full bg-transparent border-[3px] border-[#1d1a1ab4] relative flex items-center justify-center"
-            onClick={() => setSelect(1)}
-          >
-            {select === 1 ? (
-              <div className="w-[13px] h-[13px] bg-[#1d1a1acb] rounded-full" />
-            ) : null}
-          </div>
-          <h4 className="text-[18px] pl-2 font-[600] text-[#000000b1]">
-            Pay with Debit/credit card
-          </h4>
+    <div className="bg-white rounded-xl p-6 shadow-md border border-[#dce5f3]">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="bg-[#f0f4fa] p-2 rounded-full">
+          <FiCreditCard className="text-[#3d569a] text-xl" />
         </div>
-
-        {/* pay with card */}
-        {select === 1 ? (
-          <div className="w-full flex border-b">
-            <form className="w-full" onSubmit={paymentHandler}>
-              <div className="w-full flex pb-3">
-                <div className="w-[50%]">
-                  <label className="block pb-2">Name On Card</label>
-                  <input
-                    required
-                    placeholder={user && user.name}
-                    className={`${styles.input} !w-[95%] text-[#444]`}
-                    value={user && user.name}
-                  />
-                </div>
-                <div className="w-[50%]">
-                  <label className="block pb-2">Exp Date</label>
-                  <CardExpiryElement
-                    className={`${styles.input}`}
-                    options={{
-                      style: {
-                        base: {
-                          fontSize: "19px",
-                          lineHeight: 1.5,
-                          color: "#444",
-                        },
-                        empty: {
-                          color: "#3a120a",
-                          backgroundColor: "transparent",
-                          "::placeholder": {
-                            color: "#444",
-                          },
-                        },
-                      },
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="w-full flex pb-3">
-                <div className="w-[50%]">
-                  <label className="block pb-2">Card Number</label>
-                  <CardNumberElement
-                    className={`${styles.input} !h-[35px] !w-[95%]`}
-                    options={{
-                      style: {
-                        base: {
-                          fontSize: "19px",
-                          lineHeight: 1.5,
-                          color: "#444",
-                        },
-                        empty: {
-                          color: "#3a120a",
-                          backgroundColor: "transparent",
-                          "::placeholder": {
-                            color: "#444",
-                          },
-                        },
-                      },
-                    }}
-                  />
-                </div>
-                <div className="w-[50%]">
-                  <label className="block pb-2">CVV</label>
-                  <CardCvcElement
-                    className={`${styles.input} !h-[35px]`}
-                    options={{
-                      style: {
-                        base: {
-                          fontSize: "19px",
-                          lineHeight: 1.5,
-                          color: "#444",
-                        },
-                        empty: {
-                          color: "#3a120a",
-                          backgroundColor: "transparent",
-                          "::placeholder": {
-                            color: "#444",
-                          },
-                        },
-                      },
-                    }}
-                  />
-                </div>
-              </div>
-              <input
-                type="submit"
-                value="Submit"
-                className={`${styles.button} !bg-[#f63b60] text-[#fff] h-[45px] rounded-[5px] cursor-pointer text-[18px] font-[600]`}
-              />
-            </form>
-          </div>
-        ) : null}
+        <h2 className="text-xl font-bold text-[#1a2240]">Payment Method</h2>
       </div>
 
-      <br />
-      {/* paypal payment */}
-      <div>
-        <div className="flex w-full pb-5 border-b mb-2">
-          <div
-            className="w-[25px] h-[25px] rounded-full bg-transparent border-[3px] border-[#1d1a1ab4] relative flex items-center justify-center"
-            onClick={() => setSelect(2)}
-          >
-            {select === 2 ? (
-              <div className="w-[13px] h-[13px] bg-[#1d1a1acb] rounded-full" />
-            ) : null}
-          </div>
-          <h4 className="text-[18px] pl-2 font-[600] text-[#000000b1]">
-            Pay with Paypal
-          </h4>
-        </div>
-
-        {/* pay with payement */}
-        {select === 2 ? (
-          <div className="w-full flex border-b">
-            <div
-              className={`${styles.button} !bg-[#f63b60] text-white h-[45px] rounded-[5px] cursor-pointer text-[18px] font-[600]`}
-              onClick={() => setOpen(true)}
-            >
-              Pay Now
+      {/* Payment Options */}
+      <div className="space-y-6">
+        {/* Credit Card Option */}
+        <div className="border-b border-[#dce5f3] pb-6">
+          <div className="flex items-center gap-3 cursor-pointer mb-4" onClick={() => setSelect(1)}>
+            <div className="w-6 h-6 rounded-full border-2 border-[#3d569a] flex items-center justify-center">
+              {select === 1 && <div className="w-3 h-3 bg-[#3d569a] rounded-full" />}
             </div>
-            {open && (
-              <div className="w-full fixed top-0 left-0 bg-[#00000039] h-screen flex items-center justify-center z-[99999]">
-                <div className="w-full 800px:w-[40%] h-screen 800px:h-[80vh] bg-white rounded-[5px] shadow flex flex-col justify-center p-8 relative overflow-y-scroll">
-                  <div className="w-full flex justify-end p-3">
-                    <RxCross1
-                      size={30}
-                      className="cursor-pointer absolute top-3 right-3"
-                      onClick={() => setOpen(false)}
+            <div className="flex items-center gap-2">
+              <FiCreditCard className="text-[#334580]" />
+              <span className="font-medium text-[#1a2240]">Pay with Credit/Debit Card</span>
+            </div>
+          </div>
+
+          {select === 1 && (
+            <div className="pl-9">
+              <form className="w-full space-y-4" onSubmit={paymentHandler}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[#334580] font-medium mb-2">Name On Card</label>
+                    <input
+                      required
+                      placeholder={user && user.name}
+                      className="w-full px-4 py-3 rounded-lg border border-[#dce5f3] focus:outline-none focus:ring-2 focus:ring-[#3d569a]"
+                      value={user && user.name}
+                      readOnly
                     />
                   </div>
+                  <div>
+                    <label className="block text-[#334580] font-medium mb-2">Expiration Date</label>
+                    <CardExpiryElement
+                      className="w-full px-4 py-3 rounded-lg border border-[#dce5f3] focus:outline-none focus:ring-2 focus:ring-[#3d569a]"
+                      options={{
+                        style: {
+                          base: {
+                            fontSize: "16px",
+                            lineHeight: "42px",
+                            color: "#1a2240",
+                          },
+                          empty: {
+                            color: "#334580",
+                            backgroundColor: "transparent",
+                            "::placeholder": {
+                              color: "#6a8cca",
+                            },
+                          },
+                        },
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[#334580] font-medium mb-2">Card Number</label>
+                    <CardNumberElement
+                      className="w-full px-4 py-3 rounded-lg border border-[#dce5f3] focus:outline-none focus:ring-2 focus:ring-[#3d569a]"
+                      options={{
+                        style: {
+                          base: {
+                            fontSize: "16px",
+                            lineHeight: "42px",
+                            color: "#1a2240",
+                          },
+                          empty: {
+                            color: "#334580",
+                            backgroundColor: "transparent",
+                            "::placeholder": {
+                              color: "#6a8cca",
+                            },
+                          },
+                        },
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[#334580] font-medium mb-2">CVV</label>
+                    <CardCvcElement
+                      className="w-full px-4 py-3 rounded-lg border border-[#dce5f3] focus:outline-none focus:ring-2 focus:ring-[#3d569a]"
+                      options={{
+                        style: {
+                          base: {
+                            fontSize: "16px",
+                            lineHeight: "42px",
+                            color: "#1a2240",
+                          },
+                          empty: {
+                            color: "#334580",
+                            backgroundColor: "transparent",
+                            "::placeholder": {
+                              color: "#6a8cca",
+                            },
+                          },
+                        },
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-[#3d569a] hover:bg-[#2d3a69] text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-all duration-300 flex items-center justify-center gap-2"
+                >
+                  <FiCreditCard />
+                  Pay Now
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
+
+        {/* PayPal Option */}
+        <div className="border-b border-[#dce5f3] pb-6">
+          <div className="flex items-center gap-3 cursor-pointer mb-4" onClick={() => setSelect(2)}>
+            <div className="w-6 h-6 rounded-full border-2 border-[#3d569a] flex items-center justify-center">
+              {select === 2 && <div className="w-3 h-3 bg-[#3d569a] rounded-full" />}
+            </div>
+            <div className="flex items-center gap-2">
+              <SiPaypal className="text-[#334580]" />
+              <span className="font-medium text-[#1a2240]">Pay with PayPal</span>
+            </div>
+          </div>
+
+          {select === 2 && (
+            <div className="pl-9">
+              <button
+                className="w-full bg-[#0070ba] hover:bg-[#003087] text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-all duration-300 flex items-center justify-center gap-2"
+                onClick={() => setOpen(true)}
+              >
+                <SiPaypal />
+                Pay with PayPal
+              </button>
+
+              {open && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                  <div className="bg-white rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto relative">
+                    <button
+                      className="absolute top-4 right-4 text-gray-500 hover:text-[#3d569a]"
+                      onClick={() => setOpen(false)}
+                    >
+                      <RxCross1 size={24} />
+                    </button>
+
+                    <div className="text-center mb-6">
+                      <SiPaypal className="text-[#0070ba] text-4xl mx-auto mb-2" />
+                      <h3 className="text-xl font-bold text-[#1a2240]">PayPal Checkout</h3>
+                      <p className="text-[#334580] text-sm">Complete your purchase securely with PayPal</p>
+                    </div>
+
                     <PayPalScriptProvider
                       options={{
-                        "client-id":
-                          "Aczac4Ry9_QA1t4c7TKH9UusH3RTe6onyICPoCToHG10kjlNdI-qwobbW9JAHzaRQwFMn2-k660853jn",
+                        "client-id": "AfSQHKokkqFZatarCzMOg3YTGHwqs-DKHEABVbtc32S1iI_DvAKORsT4-4SH6M8unF7znTq4doebim-L",
                       }}
                     >
                       <PayPalButtons
-                        style={{ layout: "vertical" }}
+                        style={{
+                          layout: "vertical",
+                          color: "blue",
+                          shape: "rect",
+                          label: "pay",
+                        }}
                         onApprove={onApprove}
                         createOrder={createOrder}
                       />
                     </PayPalScriptProvider>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        ) : null}
-      </div>
-
-      <br />
-      {/* cash on delivery */}
-      <div>
-        <div className="flex w-full pb-5 border-b mb-2">
-          <div
-            className="w-[25px] h-[25px] rounded-full bg-transparent border-[3px] border-[#1d1a1ab4] relative flex items-center justify-center"
-            onClick={() => setSelect(3)}
-          >
-            {select === 3 ? (
-              <div className="w-[13px] h-[13px] bg-[#1d1a1acb] rounded-full" />
-            ) : null}
-          </div>
-          <h4 className="text-[18px] pl-2 font-[600] text-[#000000b1]">
-            Cash on Delivery
-          </h4>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* cash on delivery */}
-        {select === 3 ? (
-          <div className="w-full flex">
-            <form className="w-full" onSubmit={cashOnDeliveryHandler}>
-              <input
-                type="submit"
-                value="Confirm"
-                className={`${styles.button} !bg-[#f63b60] text-[#fff] h-[45px] rounded-[5px] cursor-pointer text-[18px] font-[600]`}
-              />
-            </form>
+        {/* Cash on Delivery Option */}
+        <div>
+          <div className="flex items-center gap-3 cursor-pointer mb-4" onClick={() => setSelect(3)}>
+            <div className="w-6 h-6 rounded-full border-2 border-[#3d569a] flex items-center justify-center">
+              {select === 3 && <div className="w-3 h-3 bg-[#3d569a] rounded-full" />}
+            </div>
+            <div className="flex items-center gap-2">
+              <FiTruck className="text-[#334580]" />
+              <span className="font-medium text-[#1a2240]">Cash on Delivery</span>
+            </div>
           </div>
-        ) : null}
+
+          {select === 3 && (
+            <div className="pl-9">
+              <div className="bg-[#f0f4fa] p-4 rounded-lg mb-4">
+                <p className="text-[#334580] text-sm">
+                  Pay with cash upon delivery. Please have the exact amount ready when your order arrives.
+                </p>
+              </div>
+
+              <form onSubmit={cashOnDeliveryHandler}>
+                <button
+                  type="submit"
+                  className="w-full bg-[#3d569a] hover:bg-[#2d3a69] text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-all duration-300 flex items-center justify-center gap-2"
+                >
+                  
+                  Confirm Order
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
 const CartData = ({ orderData }) => {
-  const shipping = orderData?.shipping?.toFixed(2);
-  return (
-    <div className="w-full bg-[#fff] rounded-md p-5 pb-8">
-      <div className="flex justify-between">
-        <h3 className="text-[16px] font-[400] text-[#000000a4]">subtotal:</h3>
-        <h5 className="text-[18px] font-[600]">${orderData?.subTotalPrice}</h5>
-      </div>
-      <br />
-      <div className="flex justify-between">
-        <h3 className="text-[16px] font-[400] text-[#000000a4]">shipping:</h3>
-        <h5 className="text-[18px] font-[600]">${shipping}</h5>
-      </div>
-      <br />
-      <div className="flex justify-between border-b pb-3">
-        <h3 className="text-[16px] font-[400] text-[#000000a4]">Discount:</h3>
-        <h5 className="text-[18px] font-[600]">{orderData?.discountPrice? "$" + orderData.discountPrice : "-"}</h5>
-      </div>
-      <h5 className="text-[18px] font-[600] text-end pt-3">
-        ${orderData?.totalPrice}
-      </h5>
-      <br />
-    </div>
-  );
-};
+  const shipping = orderData?.shipping?.toFixed(2)
 
-export default Payment;
+  return (
+    <div className="bg-white rounded-xl p-6 shadow-md border border-[#dce5f3]">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="bg-[#f0f4fa] p-2 rounded-full">
+          <FiCreditCard className="text-[#3d569a] text-xl" />
+        </div>
+        <h2 className="text-xl font-bold text-[#1a2240]">Order Summary</h2>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <span className="text-[#334580]">Subtotal:</span>
+          <span className="font-semibold text-[#1a2240]">Rs.{orderData?.subTotalPrice?.toLocaleString()}</span>
+        </div>
+
+        <div className="flex justify-between items-center">
+          <span className="text-[#334580]">Shipping:</span>
+          <span className="font-semibold text-[#1a2240]">Rs.{shipping}</span>
+        </div>
+
+        <div className="flex justify-between items-center">
+          <span className="text-[#334580]">Discount:</span>
+          <span className="font-semibold text-[#1a2240]">
+            {orderData?.discountPrice ? `Rs.${orderData.discountPrice}` : "-"}
+          </span>
+        </div>
+
+        <div className="border-t border-[#dce5f3] pt-4 mt-4">
+          <div className="flex justify-between items-center">
+            <span className="text-lg font-medium text-[#1a2240]">Total:</span>
+            <span className="text-xl font-bold text-[#1a2240]">Rs.{orderData?.totalPrice}</span>
+          </div>
+        </div>
+
+        <div className="bg-[#f0f4fa] p-4 rounded-lg mt-2">
+          <div className="flex items-center gap-2 mb-2">
+            <FiTruck className="text-[#3d569a]" />
+            <span className="font-medium text-[#1a2240]">Delivery Address</span>
+          </div>
+          <p className="text-sm text-[#334580]">
+            {orderData?.shippingAddress?.address1}, {orderData?.shippingAddress?.address2},
+            {orderData?.shippingAddress?.city}, Nepal - {orderData?.shippingAddress?.zipCode}
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default Payment
