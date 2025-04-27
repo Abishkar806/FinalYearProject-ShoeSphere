@@ -1,7 +1,5 @@
-import { AiOutlineGift } from "react-icons/ai"
-import { BiMessageSquareDetail } from "react-icons/bi"
-import { FiPackage, FiShoppingBag } from "react-icons/fi"
-import { MdOutlineLocalOffer } from "react-icons/md"
+
+import React from "react"
 import { useSelector } from "react-redux"
 import { Link } from "react-router-dom"
 
