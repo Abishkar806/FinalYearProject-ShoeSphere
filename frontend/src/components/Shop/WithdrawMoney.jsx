@@ -91,7 +91,7 @@ const WithdrawMoney = () => {
     if (withdrawAmount < 50 || withdrawAmount > availableBalance) {
       toast.error(
         withdrawAmount < 50
-          ? "Minimum withdrawal amount is $50"
+          ? "Minimum withdrawal amount is Rs.50"
           : "You don't have enough balance to withdraw this amount",
       )
       return
@@ -133,11 +133,11 @@ const WithdrawMoney = () => {
               <FiDollarSign size={40} className="text-[#3d569a]" />
             </div>
             <h3 className="text-[#334580] text-lg font-medium mb-2">Available Balance</h3>
-            <h2 className="text-4xl font-bold text-[#1a2240] mb-6">${availableBalance}</h2>
+            <h2 className="text-4xl font-bold text-[#1a2240] mb-6">Rs.{availableBalance}</h2>
             <button
               onClick={() =>
                 Number.parseFloat(availableBalance) < 50
-                  ? toast.error("Minimum withdrawal amount is $50")
+                  ? toast.error("Minimum withdrawal amount is Rs.50")
                   : setOpen(true)
               }
               disabled={Number.parseFloat(availableBalance) < 50}
@@ -158,7 +158,7 @@ const WithdrawMoney = () => {
               <ul className="space-y-2 text-[#334580]">
                 <li className="flex justify-between">
                   <span>Minimum withdrawal:</span>
-                  <span className="font-medium">$50.00</span>
+                  <span className="font-medium">Rs.50.00</span>
                 </li>
                 <li className="flex justify-between">
                   <span>Processing time:</span>
@@ -425,7 +425,7 @@ const WithdrawMoney = () => {
                           </button>
                         </div>
                         <p className="text-sm text-[#334580] mt-2">
-                          Minimum withdrawal: $50 | Available: ${availableBalance}
+                          Minimum withdrawal: Rs.50 | Available: Rs.{availableBalance}
                         </p>
                       </div>
                     </div>

@@ -1,17 +1,12 @@
 import React from "react"
-
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { CardNumberElement, CardCvcElement, CardExpiryElement, useStripe, useElements } from "@stripe/react-stripe-js"
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js"
 import { useSelector } from "react-redux"
 import axios from "axios"
 import { server } from "../../server"
 import { toast } from "react-toastify"
-import { RxCross1 } from "react-icons/rx"
 import { FiCreditCard, FiTruck } from "react-icons/fi"
-import { SiPaypal } from "react-icons/si"
-
 
 const Payment = () => {
   const [orderData, setOrderData] = useState([])
@@ -27,74 +22,11 @@ const Payment = () => {
     window.scrollTo(0, 0)
   }, [])
 
-  const createOrder = (data, actions) => {
-    return actions.order
-      .create({
-        purchase_units: [
-          {
-            description: "ShoeSphere Order",
-            amount: {
-              currency_code: "USD",
-              value: orderData?.totalPrice,
-            },
-          },
-        ],
-        // not needed if a shipping address is actually needed
-        application_context: {
-          shipping_preference: "NO_SHIPPING",
-        },
-      })
-      .then((orderID) => {
-        return orderID
-      })
-  }
-
   const order = {
     cart: orderData?.cart,
     shippingAddress: orderData?.shippingAddress,
     user: user && user,
     totalPrice: orderData?.totalPrice,
-  }
-
-  const onApprove = async (data, actions) => {
-    return actions.order.capture().then((details) => {
-      const { payer } = details
-
-      const paymentInfo = payer
-
-      if (paymentInfo !== undefined) {
-        paypalPaymentHandler(paymentInfo)
-      }
-    })
-  }
-
-  const paypalPaymentHandler = async (paymentInfo) => {
-    const config = {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-
-    order.paymentInfo = {
-      id: paymentInfo.payer_id,
-      status: "succeeded",
-      type: "Paypal",
-    }
-
-    await axios
-      .post(`${server}/order/create-order`, order, config)
-      .then((res) => {
-        setOpen(false)
-        navigate("/order/success")
-        toast.success("Order successful!")
-        localStorage.setItem("cartItems", JSON.stringify([]))
-        localStorage.setItem("latestOrder", JSON.stringify([]))
-        window.location.reload()
-      })
-      .catch((error) => {
-        toast.error("Something went wrong with your order")
-        console.error(error)
-      })
   }
 
   const paymentData = {
@@ -184,16 +116,12 @@ const Payment = () => {
   return (
     <div className="w-full bg-[#f0f4fa] min-h-screen py-8">
       <div className="w-[95%] 1000px:w-[85%] m-auto">
-     
-
         <div className="w-full block 800px:flex gap-8 mt-8">
           <div className="w-full 800px:w-[65%]">
             <PaymentInfo
               user={user}
               open={open}
               setOpen={setOpen}
-              onApprove={onApprove}
-              createOrder={createOrder}
               paymentHandler={paymentHandler}
               cashOnDeliveryHandler={cashOnDeliveryHandler}
             />
@@ -207,7 +135,7 @@ const Payment = () => {
   )
 }
 
-const PaymentInfo = ({ user, open, setOpen, onApprove, createOrder, paymentHandler, cashOnDeliveryHandler }) => {
+const PaymentInfo = ({ user, open, setOpen, paymentHandler, cashOnDeliveryHandler }) => {
   const [select, setSelect] = useState(1)
 
   return (
@@ -330,67 +258,6 @@ const PaymentInfo = ({ user, open, setOpen, onApprove, createOrder, paymentHandl
           )}
         </div>
 
-        {/* PayPal Option */}
-        <div className="border-b border-[#dce5f3] pb-6">
-          <div className="flex items-center gap-3 cursor-pointer mb-4" onClick={() => setSelect(2)}>
-            <div className="w-6 h-6 rounded-full border-2 border-[#3d569a] flex items-center justify-center">
-              {select === 2 && <div className="w-3 h-3 bg-[#3d569a] rounded-full" />}
-            </div>
-            <div className="flex items-center gap-2">
-              <SiPaypal className="text-[#334580]" />
-              <span className="font-medium text-[#1a2240]">Pay with PayPal</span>
-            </div>
-          </div>
-
-          {select === 2 && (
-            <div className="pl-9">
-              <button
-                className="w-full bg-[#0070ba] hover:bg-[#003087] text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-all duration-300 flex items-center justify-center gap-2"
-                onClick={() => setOpen(true)}
-              >
-                <SiPaypal />
-                Pay with PayPal
-              </button>
-
-              {open && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                  <div className="bg-white rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto relative">
-                    <button
-                      className="absolute top-4 right-4 text-gray-500 hover:text-[#3d569a]"
-                      onClick={() => setOpen(false)}
-                    >
-                      <RxCross1 size={24} />
-                    </button>
-
-                    <div className="text-center mb-6">
-                      <SiPaypal className="text-[#0070ba] text-4xl mx-auto mb-2" />
-                      <h3 className="text-xl font-bold text-[#1a2240]">PayPal Checkout</h3>
-                      <p className="text-[#334580] text-sm">Complete your purchase securely with PayPal</p>
-                    </div>
-
-                    <PayPalScriptProvider
-                      options={{
-                        "client-id": "AfSQHKokkqFZatarCzMOg3YTGHwqs-DKHEABVbtc32S1iI_DvAKORsT4-4SH6M8unF7znTq4doebim-L",
-                      }}
-                    >
-                      <PayPalButtons
-                        style={{
-                          layout: "vertical",
-                          color: "blue",
-                          shape: "rect",
-                          label: "pay",
-                        }}
-                        onApprove={onApprove}
-                        createOrder={createOrder}
-                      />
-                    </PayPalScriptProvider>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
         {/* Cash on Delivery Option */}
         <div>
           <div className="flex items-center gap-3 cursor-pointer mb-4" onClick={() => setSelect(3)}>
@@ -416,7 +283,6 @@ const PaymentInfo = ({ user, open, setOpen, onApprove, createOrder, paymentHandl
                   type="submit"
                   className="w-full bg-[#3d569a] hover:bg-[#2d3a69] text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-all duration-300 flex items-center justify-center gap-2"
                 >
-                  
                   Confirm Order
                 </button>
               </form>
