@@ -12,7 +12,7 @@ const axios = require("axios");
 const KHALTI_CONFIG = {
   BASE_URL: "https://dev.khalti.com/api/v2/epayment",
   SECRET_KEY: process.env.KHALTI_SECRET_KEY || "1867144249c744d3ba060c7de1348c98",
-  WEBSITE_URL: process.env.WEBSITE_URL || "http://localhost:8000",
+  WEBSITE_URL: "http://localhost:3000", 
   TIMEOUT: 15000,
   MAX_RETRIES: 3,
 };
@@ -271,9 +271,9 @@ router.post(
       const amountInPaisa = Math.round(totalPrice * 100);
 
       // Initiate Khalti payment
-      const khaltiPayload = {
-        return_url: `${KHALTI_CONFIG.WEBSITE_URL}/payment/khalti/verify?orderIds=${orderIds}`,
-        website_url: KHALTI_CONFIG.WEBSITE_URL,
+         const khaltiPayload = {
+        return_url: `http://localhost:3000/payment/khalti/verify?orderIds=${orderIds}`,
+        website_url: "http://localhost:3000",
         amount: amountInPaisa,
         purchase_order_id: orderIds,
         purchase_order_name: productName,
@@ -366,7 +366,7 @@ router.post(
       const amountInPaisa = Math.round(amount * 100);
 
       const payload = {
-        return_url: returnUrl || `${KHALTI_CONFIG.WEBSITE_URL}/payment/khalti/verify`,
+    return_url: `${KHALTI_CONFIG.WEBSITE_URL}/payment/khalti/verify`,
         website_url: KHALTI_CONFIG.WEBSITE_URL,
         amount: amountInPaisa,
         purchase_order_id: productIdentity,
@@ -396,7 +396,7 @@ router.post(
 
 
 router.post(
-  "/khalti/verify",
+  "payment/khalti/verify",
   catchAsyncErrors(async (req, res, next) => {
     try {
       const { pidx, orderId } = req.body;

@@ -105,7 +105,8 @@ const App = () => {
   path="/seller/activation/:activation_token"
   element={<SellerActivationPage />}
 />
-<Route path="/payment/khalti/verify" element={<KhaltiVerification />} />
+
+       <Route path="/payment/khalti/verify" element={<KhaltiVerification />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/product/:id" element={<ProductDetailsPage />} />
         <Route path="/best-selling" element={<BestSellingPage />} />
