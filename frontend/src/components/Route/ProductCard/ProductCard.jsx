@@ -81,6 +81,9 @@ const ProductCard = ({ data, isEvent }) => {
               <h4 className={`${styles.price} text-[#d55b45]`}>Rs.{data.originalPrice ? data.originalPrice : null}</h4>
             </div>
             <span className="font-[400] text-[17px] text-[#3d569a]">{data?.sold_out} sold</span>
+            {/* If sold count is in data.soldCount */}
+
+
           </div>
         </Link>
 

@@ -6,11 +6,12 @@ import { useSelector } from "react-redux"
 import axios from "axios"
 import { server } from "../../server"
 import { toast } from "react-toastify"
-import { FiCreditCard, FiTruck } from "react-icons/fi"
+import { FiCreditCard, FiTruck, FiSmartphone } from "react-icons/fi"
 
 const Payment = () => {
   const [orderData, setOrderData] = useState([])
   const [open, setOpen] = useState(false)
+  const [khaltiLoading, setKhaltiLoading] = useState(false)
   const { user } = useSelector((state) => state.user)
   const navigate = useNavigate()
   const stripe = useStripe()
@@ -113,6 +114,52 @@ const Payment = () => {
       })
   }
 
+  const khaltiPaymentHandler = async (e) => {
+    e.preventDefault()
+    setKhaltiLoading(true)
+
+    try {
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+
+      // Prepare order data for Khalti
+      const khaltiOrderData = {
+        cart: orderData?.cart,
+        shippingAddress: orderData?.shippingAddress,
+        user: user,
+        totalPrice: orderData?.totalPrice,
+        customerInfo: {
+          name: user?.name,
+          email: user?.email,
+          phone: user?.phoneNumber
+        }
+      }
+
+      // Create order with Khalti
+      const { data } = await axios.post(`${server}/order/create-order-khalti`, khaltiOrderData, config)
+
+      if (data.success) {
+        // Store order IDs for verification later
+        const orderIds = data.orders.map(order => order._id).join(',')
+        localStorage.setItem("khaltiOrderIds", orderIds)
+        localStorage.setItem("khaltiPidx", data.khalti.pidx)
+
+        // Redirect to Khalti payment page
+        window.location.href = data.khalti.payment_url
+      } else {
+        toast.error("Failed to initiate Khalti payment")
+      }
+    } catch (error) {
+      console.error("Khalti payment error:", error)
+      toast.error(error.response?.data?.message || "Failed to initiate Khalti payment")
+    } finally {
+      setKhaltiLoading(false)
+    }
+  }
+
   return (
     <div className="w-full bg-[#f0f4fa] min-h-screen py-8">
       <div className="w-[95%] 1000px:w-[85%] m-auto">
@@ -124,6 +171,8 @@ const Payment = () => {
               setOpen={setOpen}
               paymentHandler={paymentHandler}
               cashOnDeliveryHandler={cashOnDeliveryHandler}
+              khaltiPaymentHandler={khaltiPaymentHandler}
+              khaltiLoading={khaltiLoading}
             />
           </div>
           <div className="w-full 800px:w-[35%] 800px:mt-0 mt-8">
@@ -135,7 +184,15 @@ const Payment = () => {
   )
 }
 
-const PaymentInfo = ({ user, open, setOpen, paymentHandler, cashOnDeliveryHandler }) => {
+const PaymentInfo = ({ 
+  user, 
+  open, 
+  setOpen, 
+  paymentHandler, 
+  cashOnDeliveryHandler, 
+  khaltiPaymentHandler, 
+  khaltiLoading 
+}) => {
   const [select, setSelect] = useState(1)
 
   return (
@@ -252,6 +309,65 @@ const PaymentInfo = ({ user, open, setOpen, paymentHandler, cashOnDeliveryHandle
                 >
                   <FiCreditCard />
                   Pay Now
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
+
+        {/* Khalti Payment Option */}
+        <div className="border-b border-[#dce5f3] pb-6">
+          <div className="flex items-center gap-3 cursor-pointer mb-4" onClick={() => setSelect(2)}>
+            <div className="w-6 h-6 rounded-full border-2 border-[#3d569a] flex items-center justify-center">
+              {select === 2 && <div className="w-3 h-3 bg-[#3d569a] rounded-full" />}
+            </div>
+            <div className="flex items-center gap-2">
+              <FiSmartphone className="text-[#334580]" />
+              <span className="font-medium text-[#1a2240]">Pay with Khalti</span>
+              <div className="bg-gradient-to-r from-[#5D2C91] to-[#7B61FF] text-white text-xs px-2 py-1 rounded-full">
+                Digital Wallet
+              </div>
+            </div>
+          </div>
+
+          {select === 2 && (
+            <div className="pl-9">
+              <div className="bg-gradient-to-r from-[#5D2C91]/10 to-[#7B61FF]/10 p-4 rounded-lg mb-4 border border-[#7B61FF]/20">
+                <div className="flex items-center gap-3 mb-3">
+                  <img 
+                    src="https://khalti.s3.ap-south-1.amazonaws.com/website/khalti-logo-white.png" 
+                    alt="Khalti" 
+                    className="h-8 bg-[#5D2C91] px-3 py-1 rounded"
+                  />
+                  <div>
+                    <h4 className="font-semibold text-[#1a2240]">Pay with Khalti Digital Wallet</h4>
+                    <p className="text-sm text-[#334580]">Fast, secure, and convenient payment</p>
+                  </div>
+                </div>
+                <div className="text-sm text-[#334580] space-y-1">
+                  <p>• Pay using Khalti balance, bank account, or cards</p>
+                  <p>• No extra charges for digital wallet payments</p>
+                  <p>• Instant payment confirmation</p>
+                </div>
+              </div>
+
+              <form onSubmit={khaltiPaymentHandler}>
+                <button
+                  type="submit"
+                  disabled={khaltiLoading}
+                  className="w-full bg-gradient-to-r from-[#5D2C91] to-[#7B61FF] hover:from-[#4A1D7A] hover:to-[#6B4EE6] text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {khaltiLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <FiSmartphone />
+                      Pay with Khalti
+                    </>
+                  )}
                 </button>
               </form>
             </div>

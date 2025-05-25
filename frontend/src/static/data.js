@@ -1,4 +1,13 @@
-import Nike from "../Assests/Nike.png";
+import ladies from "../Assests/ladies.png";
+import kids from "../Assests/kids.png";
+import party from "../Assests/party.png";
+import running from "../Assests/running.png";
+import formal from "../Assests/formal.png";
+import casual from "../Assests/casual.png";
+import sports from "../Assests/sports.png";
+import boots from "../Assests/boots.png";
+import sneakers from "../Assests/sneekers.png";
+import slippers from "../Assests/slippers.png";
 // import Addidas from "../Assests/Adidas.png";
 // import Shop_avator from "../Assests/shop_avator1.png";
 // navigation Data
@@ -200,61 +209,62 @@ export const shoeCategoriesData = [
     id: 1,
     title: "Ladies Shoes",
     subTitle: "",
-    image_Url: Nike, // Replace with the actual image URL or import
+    image_Url: ladies, // Replace with the actual image URL or import
   },
   {
     id: 2,
     title: "Kids Shoes",
     subTitle: "",
-    image_Url: Nike,
+    image_Url: kids,
   },
   {
     id: 3,
     title: "Party Shoes",
     subTitle: "",
-    image_Url: Nike,
+    image_Url: party,
   },
   {
     id: 4,
     title: "Running Shoes",
     subTitle: "",
-    image_Url: Nike,
+    image_Url: running,
   },
   {
     id: 5,
     title: "Formal Shoes",
     subTitle: "",
-    image_Url: Nike,
+    image_Url: formal,
   },
   {
     id: 6,
     title: "Casual Shoes",
     subTitle: "",
-    image_Url: Nike,
+    image_Url: casual,
   },
   {
     id: 7,
     title: "Sports Shoes",
     subTitle: "",
-    image_Url: Nike,
+    image_Url: sports,
   },
+
   {
     id: 8,
     title: "Boots",
     subTitle: "",
-    image_Url: Nike,
+    image_Url: boots,
   },
   {
     id: 9,
     title: "Slippers",
     subTitle: "",
-    image_Url: Nike,
+    image_Url: slippers,
   },
   {
     id: 10,
     title: "Sneakers",
     subTitle: "",
-    image_Url: Nike,
+    image_Url: sneakers,
   },
 ];
 

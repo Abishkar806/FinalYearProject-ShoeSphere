@@ -60,6 +60,7 @@ import axios from "axios";
 import { server } from "./server";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
+import KhaltiVerification from "./components/Payment/khalti_payment_verification.jsx";
 
 const App = () => {
   const [stripeApikey, setStripeApiKey] = useState("");
@@ -104,7 +105,7 @@ const App = () => {
   path="/seller/activation/:activation_token"
   element={<SellerActivationPage />}
 />
-
+<Route path="/payment/khalti/verify" element={<KhaltiVerification />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/product/:id" element={<ProductDetailsPage />} />
         <Route path="/best-selling" element={<BestSellingPage />} />

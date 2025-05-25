@@ -26,7 +26,7 @@ const OrderDetails = () => {
   const orderUpdateHandler = async (e) => {
     await axios
       .put(
-        `{server}/order/update-order-status/${id}`,
+        `${server}/order/update-order-status/${id}`,
         {
           status,
         },
